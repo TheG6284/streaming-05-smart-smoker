@@ -6,7 +6,7 @@ Gabbs Albrecht
 
 """
 
-#imports listed at head of module
+#imports listed at front of module
 import pika
 import sys
 import time
@@ -14,9 +14,9 @@ from collections import deque
 
 #Defining Variables at head of the module
 host = "localhost"
-queue = "smoker"
-smokertemp_deque = deque(maxlen = 5)
-smokertemp_alert = -15
+queue = "food_A"
+foodA_deque = deque(maxlen = 20)
+foodA_alert = 1
 
 
 #Callback function to handle the incoming messages
@@ -27,24 +27,26 @@ def callback(ch, method, properties, body):
     print(f" [x] Received {message}")
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    #Attempts to split timestamp from temperature, and calculate the change over the time window
+    #Attempts to split timestamp from temperature, and calculate the change over the time window 
     try:
-        smokertemp_current = float(message.split(",")[1])
-        smokertemp_deque.append(smokertemp_current)
-        smokertemp_change = smokertemp_current - smokertemp_deque[0]
+        foodA_current = float(message.split(",")[1])
+        foodA_deque.append(foodA_current)
+        foodA_change = foodA_current - foodA_deque[0]
+
+        print(f" [x] Received {message}\nTemperature change is at: {foodA_change}")
         
-        #Sends warning if temperature drastically drops
-        if smokertemp_change < smokertemp_alert:
-            print(f"TEMPERATURE DROP: Your smoker temperature decreased rapidly. Please check on it at once!")
+        #Sends warning if temperature stalls
+        if abs(foodA_change) < foodA_alert:
+            print(f"STALL: Your food's temperature has stopped increacing. Please check on it at once!")
 
     #Returns that no temperature value was read
     except Exception as e:
-        smokertemp_deque.append(0.0)
+        foodA_deque.append(0.0)
         print("No temperature reading received")
 
 
-#Continuously listens for messages on a queue, smoker queue is the default.
-def main(hn: str = "localhost", qn: str = "smoker"):
+#Continuously listens for messages on a queue, food_A queue is the default.
+def main(hn: str = "localhost", qn: str = "food_A"):
     
     #Attempts to connect to the host
     try:
@@ -58,7 +60,7 @@ def main(hn: str = "localhost", qn: str = "smoker"):
         print(f"The error says: {e}")
         print()
         sys.exit(1)
-
+    
     #Declares and connects to proper queue, defines our callback function for handling messages on it, and starts consuming messages
     try:
         channel = connection.channel()
