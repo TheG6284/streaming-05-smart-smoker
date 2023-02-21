@@ -1,4 +1,5 @@
 # streaming-05-smart-smoker
+By: Gabbs Albrecht, 02/21/2023
 
 ## Intro & Operation
 This program is designed to simulate a smart smoker system to moniter real-time events within the smoker.
